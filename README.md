@@ -57,16 +57,35 @@ You need a free Supabase project. Do this once.
 If the keys are missing or wrong, the app automatically falls back to per-browser
 `localStorage` (single-device only) and logs a message to the browser console.
 
+## Candidate list (uploaded by the organizer)
+
+The organizer sets the candidate list by uploading a **CSV or Excel** file on the
+dashboard — no code editing required. The file needs four columns (header names are
+matched loosely, so `Family name` / `family` / `Surname` all work):
+
+| Column | Meaning |
+| --- | --- |
+| `ID` | Poster number (unique) |
+| `Family name` | Last name |
+| `First name` | Given name |
+| `Year` | PhD year (used to group posters) |
+
+A **"Download template CSV"** button on the dashboard produces a correctly-formatted
+starter file. The uploaded list is saved to the shared database, so every juror's
+device picks it up automatically. If no list has been uploaded, the app uses the
+default roster baked into `script.js`.
+
 ## Reusing the platform next year
 
-The "wipe and restart" model:
+Everything is one button on the organizer dashboard: **"Start new event"**. It:
 
-1. **Update the candidate list.** Edit the `CANDIDATES` array at the top of
-   `assets/js/script.js` with this year's students (`id`, `family`, `first`, `year`).
-2. **(Optional) change the organizer passcode** — `ORG_PASSCODE` in `script.js`.
-3. **Clear last year's results.** Open the organizer dashboard and click
-   **"Clear all results (start a new event)"**. Export the previous CSV first if
-   you want to archive it.
+1. Offers to download the previous event's results as a CSV backup (if any exist).
+2. Asks for this year's participant file (CSV or Excel).
+3. Shows a summary (students per year, duplicate-ID warnings) for confirmation.
+4. Saves the new roster to the shared database **and** clears the previous event's
+   scores together — so every device is ready for the new event.
+
+(Optional) change the organizer passcode — `ORG_PASSCODE` in `script.js`.
 
 ## Files
 
