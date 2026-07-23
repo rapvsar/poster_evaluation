@@ -36,7 +36,9 @@ const RUBRIC = [
    ]}
 ];
 
-const ORG_PASSCODE = 'PRD2026';
+// The organizer password is NOT stored in this code. It is set by the organizer
+// at runtime and kept in the shared database as a salted SHA-256 hash (see the
+// helpers below and renderOrgGate). Change it any time from the dashboard.
 const LOCAL_STORAGE_NAMESPACE = 'poster-evaluation:';
 
 let state = { view:'home' };
@@ -172,6 +174,37 @@ function downloadRosterTemplate(){
   a.href = url; a.download = 'candidate_list_template.csv';
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
+}
+
+// ---- Organizer password (hashed, stored in the shared DB — never in this code) ----
+function randHex(nBytes){
+  const a = new Uint8Array(nBytes);
+  crypto.getRandomValues(a);
+  return [...a].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function hashPass(pass, salt){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + '::' + pass));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function loadOrgConfig(){
+  try{
+    if(window.storage && typeof window.storage.get === 'function'){
+      const res = await window.storage.get('config:orgpass', true);
+      return res && res.value ? JSON.parse(res.value) : null;
+    }
+    const v = window.localStorage.getItem(LOCAL_STORAGE_NAMESPACE + 'config:orgpass');
+    return v ? JSON.parse(v) : null;
+  }catch(e){ return null; }
+}
+async function saveOrgConfig(cfg){
+  const value = JSON.stringify(cfg);
+  try{
+    if(window.storage && typeof window.storage.set === 'function'){
+      return !!(await window.storage.set('config:orgpass', value, true));
+    }
+    window.localStorage.setItem(LOCAL_STORAGE_NAMESPACE + 'config:orgpass', value);
+    return true;
+  }catch(e){ return false; }
 }
 
 function render(){
@@ -448,24 +481,61 @@ function renderSubmitted(app){
   app.appendChild(btn2);
 }
 
-function renderOrgGate(app){
+async function renderOrgGate(app){
   topbar(app, 'Organizer access', '', () => { state.view='home'; render(); });
   const card = document.createElement('div');
   card.className='card';
+  card.innerHTML = `<div class="empty-state">Checking…</div>`;
+  app.appendChild(card);
+
+  const cfg = await loadOrgConfig();
+
+  // First-time setup: no organizer password exists yet.
+  if(!cfg){
+    card.innerHTML = `
+      <label>Create an organizer password</label>
+      <p style="color:var(--ink-soft);font-size:13px;margin:4px 0 10px;">No organizer password is set yet. Create one now — it works on every device, and you can change it later from the dashboard.</p>
+      <input type="password" id="passInput" placeholder="New password (min 4 characters)">
+      <div style="height:10px"></div>
+      <input type="password" id="passConfirm" placeholder="Confirm password">
+      <div style="height:14px"></div>
+      <button class="btn btn-primary" id="goBtn">Set password &amp; continue</button>
+      <div class="footnote">Set this right after deploying, before sharing the link, so only you control dashboard access.</div>
+    `;
+    document.getElementById('goBtn').onclick = async () => {
+      const p1 = document.getElementById('passInput').value;
+      const p2 = document.getElementById('passConfirm').value;
+      if(p1.length < 4){ alert('Please use at least 4 characters.'); return; }
+      if(p1 !== p2){ alert('The two passwords do not match.'); return; }
+      const btn = document.getElementById('goBtn'); btn.disabled = true; btn.textContent = 'Saving…';
+      const salt = randHex(16);
+      const hash = await hashPass(p1, salt);
+      const ok = await saveOrgConfig({ salt, hash });
+      if(ok){ state.view='dashboard'; render(); }
+      else { btn.disabled = false; btn.textContent = 'Set password & continue'; alert('Could not save the password — check your connection and try again.'); }
+    };
+    document.getElementById('passInput').focus();
+    return;
+  }
+
+  // Normal gate: verify the entered password against the stored hash.
   card.innerHTML = `
-    <label>Passcode</label>
-    <input type="password" id="passInput" placeholder="Enter organizer passcode">
+    <label>Organizer password</label>
+    <input type="password" id="passInput" placeholder="Enter organizer password">
     <div style="height:14px"></div>
     <button class="btn btn-primary" id="goBtn">View dashboard</button>
-    <div class="footnote">This is a soft gate to keep results hidden from jury members during the event, not a security measure.</div>
+    <div class="footnote">Keeps results hidden from jury members during the event.</div>
   `;
-  app.appendChild(card);
-  document.getElementById('goBtn').onclick = () => {
+  const verify = async () => {
+    const btn = document.getElementById('goBtn'); btn.disabled = true; btn.textContent = 'Checking…';
     const v = document.getElementById('passInput').value;
-    if(v === ORG_PASSCODE){ state.view='dashboard'; render(); }
-    else alert('Incorrect passcode.');
+    const hash = await hashPass(v, cfg.salt);
+    if(hash === cfg.hash){ state.view='dashboard'; render(); }
+    else { btn.disabled = false; btn.textContent = 'View dashboard'; alert('Incorrect password.'); }
   };
-  document.getElementById('passInput').onkeydown = (e) => { if(e.key==='Enter') document.getElementById('goBtn').click(); };
+  document.getElementById('goBtn').onclick = verify;
+  document.getElementById('passInput').onkeydown = (e) => { if(e.key==='Enter') verify(); };
+  document.getElementById('passInput').focus();
 }
 
 async function renderDashboard(app){
@@ -655,6 +725,32 @@ async function renderDashboard(app){
   exportBtn.style.marginTop='16px';
   exportBtn.onclick = () => exportCSV(agg, records);
   app.appendChild(exportBtn);
+
+  // Change the organizer password (stored hashed in the shared DB).
+  const pwBtn = document.createElement('button');
+  pwBtn.className='btn btn-ghost';
+  pwBtn.textContent='Change organizer password';
+  pwBtn.style.marginTop='10px';
+  pwBtn.onclick = async () => {
+    const cfg = await loadOrgConfig();
+    if(cfg){
+      const cur = prompt('Enter the CURRENT organizer password:');
+      if(cur === null) return;
+      const curHash = await hashPass(cur, cfg.salt);
+      if(curHash !== cfg.hash){ alert('Current password is incorrect.'); return; }
+    }
+    const p1 = prompt('Enter the NEW organizer password (min 4 characters):');
+    if(p1 === null) return;
+    if(p1.length < 4){ alert('Please use at least 4 characters.'); return; }
+    const p2 = prompt('Confirm the new password:');
+    if(p2 === null) return;
+    if(p1 !== p2){ alert('The two passwords do not match.'); return; }
+    const salt = randHex(16);
+    const hash = await hashPass(p1, salt);
+    const ok = await saveOrgConfig({ salt, hash });
+    alert(ok ? 'Organizer password updated. Use it next time you open the dashboard.' : 'Could not update the password — check your connection and try again.');
+  };
+  app.appendChild(pwBtn);
 
   const footnote = document.createElement('div');
   footnote.className='footnote';
