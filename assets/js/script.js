@@ -265,8 +265,8 @@ function renderJuryName(app){
   const card = document.createElement('div');
   card.className='card';
   card.innerHTML = `
-    <label>Jury member name</label>
-    <input type="text" id="juryInput" placeholder="e.g. Prof. Anna Weber" value="${esc(state.juryName||'')}">
+    <label>Jury ID</label>
+    <input type="text" id="juryInput" placeholder="Enter your Jury ID" value="${esc(state.juryName||'')}">
     <div style="height:14px"></div>
     <button class="btn btn-primary" id="continueBtn" disabled>Continue</button>
   `;
