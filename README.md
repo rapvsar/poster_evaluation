@@ -72,8 +72,8 @@ matched loosely, so `Family name` / `family` / `Surname` all work):
 
 A **"Download template CSV"** button on the dashboard produces a correctly-formatted
 starter file. The uploaded list is saved to the shared database, so every juror's
-device picks it up automatically. If no list has been uploaded, the app uses the
-default roster baked into `script.js`.
+device picks it up automatically. There is **no** roster hardcoded in the app — until
+the organizer uploads a file, jurors see a "No posters yet" message.
 
 ## Reusing the platform next year
 
@@ -85,7 +85,25 @@ Everything is one button on the organizer dashboard: **"Start new event"**. It:
 4. Saves the new roster to the shared database **and** clears the previous event's
    scores together — so every device is ready for the new event.
 
-(Optional) change the organizer passcode — `ORG_PASSCODE` in `script.js`.
+(Optional) change the organizer password from the dashboard — see below.
+
+## Organizer password
+
+The organizer password is **not** stored in the code. It's kept in the shared
+database as a salted SHA-256 hash and set at runtime:
+
+- **First use:** the first person to open "Organizer dashboard" is asked to
+  **create** the password. Do this right after deploying, before sharing the link.
+- **After that:** the dashboard asks for that password on every device.
+- **To change it:** open the dashboard and click **"Change organizer password"**
+  (you must enter the current one first).
+- **Resetting the results** (Start new event) does **not** change the password.
+
+Note: this is a convenience gate, not hardened security — the app is a static site
+using a public database key, so the results are not cryptographically protected from
+a determined technical user. It's enough to keep jury members out of the dashboard
+during the event. For stronger protection, the app would need Supabase Auth with
+row-level-security rules.
 
 ## Files
 
