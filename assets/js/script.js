@@ -1,4 +1,7 @@
-const CANDIDATES = [{"id": 1, "family": "ALI", "first": "Raza", "year": 1}, {"id": 2, "family": "BATEBI", "first": "Danial", "year": 1}, {"id": 3, "family": "GHARAJEHDAGHI AGHAJARI", "first": "Kosar", "year": 1}, {"id": 4, "family": "MONTALBANO", "first": "Sofia", "year": 1}, {"id": 5, "family": "SAEDI", "first": "Zohreh", "year": 1}, {"id": 6, "family": "SCHUMACHER", "first": "Markus", "year": 1}, {"id": 7, "family": "VIJAYA KUMAR", "first": "Ashwin", "year": 1}, {"id": 8, "family": "DABAGHIA", "first": "Abdelhaq", "year": 1}, {"id": 9, "family": "AHMAD", "first": "Hamza", "year": 2}, {"id": 10, "family": "AKTER", "first": "Salena", "year": 2}, {"id": 11, "family": "ANIKWENWA", "first": "Ebenezer Chukwuemeka", "year": 2}, {"id": 12, "family": "AWASTHI", "first": "Lawanya", "year": 2}, {"id": 13, "family": "AYALEW", "first": "Lekidelu Asrat", "year": 2}, {"id": 14, "family": "BERNA", "first": "Tom", "year": 2}, {"id": 15, "family": "ELLOUMI", "first": "Rania", "year": 2}, {"id": 16, "family": "FAGHIH NASIRI", "first": "Elaheh", "year": 2}, {"id": 17, "family": "JABBARZADEH GHANDILOU", "first": "Milad", "year": 2}, {"id": 18, "family": "LEI", "first": "Lei", "year": 2}, {"id": 19, "family": "MAAS", "first": "Anne Birgit", "year": 2}, {"id": 20, "family": "MAROCCO", "first": "Stefano", "year": 2}, {"id": 21, "family": "MOUSAVI AVINDIN", "first": "Zahra Alsadat", "year": 2}, {"id": 22, "family": "NASSOH", "first": "Adil", "year": 2}, {"id": 23, "family": "SANTOS DANTAS", "first": "Ana Karine", "year": 2}, {"id": 24, "family": "SCHMICKRATH", "first": "Romain", "year": 2}, {"id": 25, "family": "SCHULER", "first": "Nicolas Peter", "year": 2}, {"id": 26, "family": "SCHULTE", "first": "Jan Patrick", "year": 2}, {"id": 27, "family": "SYNDIKUS", "first": "Lisa Anne", "year": 2}, {"id": 28, "family": "USUBLU", "first": "Mahammadtagi", "year": 2}, {"id": 29, "family": "WITCHALLS", "first": "Joseph Luke", "year": 2}, {"id": 30, "family": "ABIDI", "first": "Hsen", "year": 3}, {"id": 31, "family": "AHMADZADE BEIRAKI", "first": "Esmaeel", "year": 3}, {"id": 32, "family": "BALDIG", "first": "Nick", "year": 3}, {"id": 33, "family": "BERQUEDICH", "first": "Amine", "year": 3}, {"id": 34, "family": "DANESHGARI", "first": "Sonia", "year": 3}, {"id": 35, "family": "DJORDJEVIC ÉP. BÜRGER", "first": "Andrija", "year": 3}, {"id": 36, "family": "FABBRICATORE", "first": "Francesco", "year": 3}, {"id": 37, "family": "FARAJI", "first": "Pedram", "year": 3}, {"id": 38, "family": "GAMMOUDI", "first": "Hajer", "year": 3}, {"id": 39, "family": "HELTEN", "first": "Kris", "year": 3}, {"id": 40, "family": "KHRAIMECH", "first": "Sarah", "year": 3}, {"id": 41, "family": "KIRILIN", "first": "Yury", "year": 3}, {"id": 42, "family": "LOUIE ÉP. COLLIN", "first": "Monica Laisun", "year": 3}, {"id": 43, "family": "MOLAHALLI", "first": "Pranav Rajah", "year": 3}, {"id": 44, "family": "PAPOT", "first": "Vianney, Claude, Guy", "year": 3}, {"id": 45, "family": "PAULUS", "first": "Pascal", "year": 3}, {"id": 46, "family": "SABOURI", "first": "Reza", "year": 3}, {"id": 47, "family": "SILVA DE CARVALHO", "first": "Adriano", "year": 3}, {"id": 48, "family": "TALLA SIMO", "first": "Alexis Blaise", "year": 3}, {"id": 49, "family": "ABDELKARIM", "first": "Anas Yousef Hasan", "year": 4}, {"id": 50, "family": "ADEL MOHAMED ALI IBRAHIM", "first": "Alaa", "year": 4}, {"id": 51, "family": "AMINIGARAKANI", "first": "Zahra", "year": 4}, {"id": 52, "family": "BELGACEM", "first": "Heni", "year": 4}, {"id": 53, "family": "BISWAS", "first": "Sabuj Chandra", "year": 4}, {"id": 54, "family": "BRAUN", "first": "Luisa", "year": 4}, {"id": 55, "family": "DYSON", "first": "Joseph Daniel", "year": 4}, {"id": 56, "family": "HAYDER", "first": "Rabie", "year": 4}, {"id": 57, "family": "MA", "first": "Aoxiang", "year": 4}, {"id": 58, "family": "MOCK", "first": "Maximilian", "year": 4}, {"id": 59, "family": "RASTEGARPANAH", "first": "Mohammad", "year": 4}, {"id": 60, "family": "SARETZKY", "first": "Felix", "year": 4}, {"id": 61, "family": "ZANON", "first": "Riccardo", "year": 4}, {"id": 62, "family": "ZHANG", "first": "Xiao Chen", "year": 4}];
+// The candidate list is NOT hardcoded. The organizer uploads it as a CSV/Excel
+// file on the dashboard ("Start new event"); it is saved to the shared database
+// and loaded on every device at startup. It stays empty until then.
+let CANDIDATES = [];
 
 const RUBRIC = [
   {key:'intro', label:'Introduction, objectives, hypothesis, methods & scientific rigour', weight:0.35,
@@ -86,6 +89,91 @@ async function listJuryKeys(){
   }catch(e){ return []; }
 }
 
+// ---- Candidate roster (organizer-uploaded CSV/Excel) ----
+async function loadCandidateList(){
+  try{
+    if(window.storage && typeof window.storage.get === 'function'){
+      const res = await window.storage.get('candidates', true);
+      return res && res.value ? JSON.parse(res.value) : null;
+    }
+    const v = window.localStorage.getItem(LOCAL_STORAGE_NAMESPACE + 'candidates');
+    return v ? JSON.parse(v) : null;
+  }catch(e){ return null; }
+}
+async function saveCandidateList(list){
+  const value = JSON.stringify(list);
+  try{
+    if(window.storage && typeof window.storage.set === 'function'){
+      return !!(await window.storage.set('candidates', value, true));
+    }
+    window.localStorage.setItem(LOCAL_STORAGE_NAMESPACE + 'candidates', value);
+    return true;
+  }catch(e){ return false; }
+}
+
+// Turn spreadsheet rows into {id, family, first, year}. Column names are matched
+// flexibly (case/spacing/punctuation-insensitive) so the organizer doesn't have
+// to format the header exactly.
+function normalizeRoster(rows){
+  const norm = s => String(s).trim().toLowerCase().replace(/[^a-z0-9]/g,'');
+  const pick = (obj, names) => { for(const n of names){ if(obj[n]!==undefined && obj[n]!=='') return obj[n]; } return undefined; };
+  const out = [];
+  rows.forEach(r => {
+    const o = {};
+    Object.keys(r).forEach(k => { o[norm(k)] = r[k]; });
+    const idRaw    = pick(o, ['id','posternumber','poster','number','no']);
+    const family   = pick(o, ['familyname','family','lastname','surname','last']);
+    const first    = pick(o, ['firstname','first','givenname','given','name']);
+    const yearRaw  = pick(o, ['year','phdyear','yr']);
+    const id = parseInt(idRaw, 10);
+    const year = parseInt(yearRaw, 10);
+    if(!Number.isFinite(id) || family === undefined) return; // skip rows without an ID or family name
+    out.push({
+      id,
+      family: String(family).trim(),
+      first: String(first || '').trim(),
+      year: Number.isFinite(year) ? year : 1
+    });
+  });
+  return out;
+}
+
+function parseCandidatesFile(file){
+  return new Promise((resolve, reject) => {
+    if(typeof XLSX === 'undefined'){
+      reject(new Error('spreadsheet reader failed to load (check your internet connection)'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try{
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+        resolve(normalizeRoster(rows));
+      }catch(err){ reject(err); }
+    };
+    reader.onerror = () => reject(new Error('could not read the file'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function downloadRosterTemplate(){
+  const rows = [
+    ['ID','Family name','First name','Year'],
+    [1,'SMITH','Alex',1],
+    [2,'GARCIA','Maria',1],
+    [3,'CHEN','Wei',2]
+  ];
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join(String.fromCharCode(10));
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'candidate_list_template.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function render(){
   const app = document.getElementById('app');
   app.innerHTML = '';
@@ -165,16 +253,29 @@ function renderJuryName(app){
 
 function renderYear(app){
   topbar(app, 'Choose a year', `Jury: ${esc(state.juryName)}`, () => { state.view='home'; render(); });
+  if(!CANDIDATES.length){
+    const empty = document.createElement('div');
+    empty.className='card';
+    empty.style.textAlign='center';
+    empty.innerHTML = `
+      <div style="font-size:34px;margin-bottom:6px;">🗒️</div>
+      <h2 style="font-size:18px;margin-bottom:6px;">No posters yet</h2>
+      <p style="color:var(--ink-soft);font-size:14.5px;">The candidate list hasn't been uploaded yet. Please ask the organizer to start the event, then try again.</p>
+    `;
+    app.appendChild(empty);
+    return;
+  }
   const card = document.createElement('div');
   card.className='year-grid';
-  for(let y=1; y<=4; y++){
+  const years = [...new Set(CANDIDATES.map(c=>c.year))].sort((a,b)=>a-b);
+  years.forEach(y => {
     const count = CANDIDATES.filter(c=>c.year===y).length;
     const btn = document.createElement('div');
     btn.className='year-btn';
     btn.innerHTML = `Year ${y}<small>${count} posters</small>`;
     btn.onclick = () => { state.year = y; state.view='candidate'; render(); };
     card.appendChild(btn);
-  }
+  });
   app.appendChild(card);
 }
 
@@ -406,13 +507,104 @@ async function renderDashboard(app){
   `;
   app.appendChild(stat);
 
+  // ---- Start new event (upload roster + clear previous scores, in one flow) ----
+  const eventCard = document.createElement('div');
+  eventCard.className='card';
+  eventCard.innerHTML = `
+    <h3 style="font-size:16px;margin-bottom:6px;">Candidate list &amp; new event</h3>
+    <p style="color:var(--ink-soft);font-size:13.5px;margin-bottom:6px;">
+      <b>${CANDIDATES.length}</b> students currently loaded.
+    </p>
+    <p style="color:var(--ink-soft);font-size:13.5px;margin-bottom:12px;">
+      <b>Start new event</b> uploads this year's participant list (CSV or Excel with
+      <b>ID, Family name, First name, Year</b>) and clears the previous event's scores — in one step.
+    </p>
+    <input type="file" id="rosterFile" accept=".csv,.xlsx,.xls" style="display:none">
+    <button class="btn btn-gold" id="startEventBtn">Start new event</button>
+    <button class="btn btn-ghost" id="templateBtn" style="margin-top:10px;">Download template CSV</button>
+    <div id="rosterMsg" style="font-size:13px;margin-top:10px;color:var(--ink-soft);"></div>
+  `;
+  app.appendChild(eventCard);
+
+  const rosterInput = eventCard.querySelector('#rosterFile');
+  const rosterMsg = eventCard.querySelector('#rosterMsg');
+  eventCard.querySelector('#templateBtn').onclick = downloadRosterTemplate;
+
+  // Step 1 — kept synchronous so the browser keeps the user-gesture needed to
+  // open the CSV download and the file picker.
+  eventCard.querySelector('#startEventBtn').onclick = () => {
+    if(totalSubmissions > 0){
+      if(confirm(`There are ${totalSubmissions} evaluation(s) from the current event.\n\nDownload them as a CSV backup before starting the new event? (recommended)`)){
+        exportCSV(agg, records);
+      }
+    }
+    rosterMsg.style.color = 'var(--ink-soft)';
+    rosterMsg.textContent = 'Choose the participant file…';
+    rosterInput.value = '';
+    rosterInput.click();
+  };
+
+  // Step 2 — file chosen: parse, confirm, then save roster + clear old scores.
+  rosterInput.onchange = async (e) => {
+    const file = e.target.files[0];
+    if(!file){ rosterMsg.textContent = ''; return; }
+    rosterMsg.style.color = 'var(--ink-soft)';
+    rosterMsg.textContent = 'Reading file…';
+
+    let list;
+    try{ list = await parseCandidatesFile(file); }
+    catch(err){
+      rosterMsg.style.color = '#b23';
+      rosterMsg.textContent = 'Could not read the file: ' + (err && err.message ? err.message : 'unknown error');
+      return;
+    }
+    if(!list.length){
+      rosterMsg.style.color = '#b23';
+      rosterMsg.textContent = 'No valid rows found. Columns needed: ID, Family name, First name, Year.';
+      return;
+    }
+
+    const ids = list.map(c=>c.id);
+    const dupes = [...new Set(ids.filter((v,i)=>ids.indexOf(v)!==i))];
+    const byYear = {};
+    list.forEach(c => { byYear[c.year] = (byYear[c.year]||0)+1; });
+    const summary = Object.keys(byYear).sort((a,b)=>a-b).map(y=>`Year ${y}: ${byYear[y]}`).join(', ');
+    const dupeWarn = dupes.length ? `\n\n⚠ Duplicate poster IDs: ${dupes.join(', ')} — each poster should have a unique ID.` : '';
+    const scoreWarn = totalSubmissions > 0 ? `\n\nThis will DELETE all ${totalSubmissions} current score(s).` : '';
+    if(!confirm(`Start a new event with ${list.length} students?\n\n${summary}${dupeWarn}${scoreWarn}\n\nThis cannot be undone.`)){
+      rosterMsg.textContent = 'Cancelled.';
+      return;
+    }
+
+    rosterMsg.textContent = 'Setting up…';
+    const saved = await saveCandidateList(list);
+    if(!saved){
+      rosterMsg.style.color = '#b23';
+      rosterMsg.textContent = 'Could not save the new list — check your connection and try again.';
+      return;
+    }
+    if(window.storage && typeof window.storage.clearAll === 'function'){
+      try{ await window.storage.clearAll(); }
+      catch(err){
+        CANDIDATES = list;
+        alert('The new list was saved, but the old scores could not be cleared automatically. Please try "Start new event" again.');
+        render();
+        return;
+      }
+    }
+    CANDIDATES = list;
+    alert(`New event ready — ${list.length} students loaded and previous scores cleared.`);
+    render();
+  };
+
   const refreshBtn = document.createElement('button');
   refreshBtn.className='btn btn-ghost'; refreshBtn.textContent='↻ Refresh';
   refreshBtn.style.marginBottom='16px';
   refreshBtn.onclick = () => render();
   app.appendChild(refreshBtn);
 
-  for(let y=1; y<=4; y++){
+  const dashYears = [...new Set(CANDIDATES.map(c=>c.year))].sort((a,b)=>a-b);
+  for(const y of dashYears){
     const rows = Object.values(agg).filter(a => a.candidate.year===y)
       .map(a => ({...a, avg: a.count ? a.sum/a.count : null}))
       .sort((a,b) => (b.avg??-1) - (a.avg??-1));
@@ -464,31 +656,6 @@ async function renderDashboard(app){
   exportBtn.onclick = () => exportCSV(agg, records);
   app.appendChild(exportBtn);
 
-  // New-event reset: wipe every submission so the platform can be reused next year.
-  const clearBtn = document.createElement('button');
-  clearBtn.className='btn btn-ghost';
-  clearBtn.textContent='Clear all results (start a new event)';
-  clearBtn.style.marginTop='10px';
-  clearBtn.style.color='#b23';
-  clearBtn.onclick = async () => {
-    if(!(window.storage && typeof window.storage.clearAll === 'function')){
-      alert('Clearing is only available when connected to the online database.');
-      return;
-    }
-    if(!confirm('Delete ALL submissions from every jury member? This cannot be undone.\n\nExport the CSV first if you want to keep this year’s results.')) return;
-    if(!confirm('Are you absolutely sure? All rankings will be reset to zero.')) return;
-    clearBtn.disabled = true; clearBtn.textContent = 'Clearing…';
-    try{
-      await window.storage.clearAll();
-      alert('All results cleared. The platform is ready for a new event.');
-      render();
-    }catch(e){
-      clearBtn.disabled = false; clearBtn.textContent = 'Clear all results (start a new event)';
-      alert('Could not clear results — please check your connection and try again.');
-    }
-  };
-  app.appendChild(clearBtn);
-
   const footnote = document.createElement('div');
   footnote.className='footnote';
   footnote.textContent = "Ranking uses each candidate's average weighted score (out of 9) across all jury submissions received. Winner = top-ranked candidate per year, shown once at least one evaluation exists.";
@@ -497,7 +664,8 @@ async function renderDashboard(app){
 
 function exportCSV(agg, records){
   const rows = [['Year','Poster#','Family','First','AvgWeightedScore(/9)','NumEvaluations','Rank']];
-  for(let y=1;y<=4;y++){
+  const years = [...new Set(CANDIDATES.map(c=>c.year))].sort((a,b)=>a-b);
+  for(const y of years){
     const list = Object.values(agg).filter(a=>a.candidate.year===y)
       .map(a=>({...a, avg: a.count ? a.sum/a.count : null}))
       .sort((a,b)=>(b.avg??-1)-(a.avg??-1));
@@ -522,4 +690,9 @@ function exportCSV(agg, records){
   URL.revokeObjectURL(url);
 }
 
-render();
+async function init(){
+  const saved = await loadCandidateList();
+  if(Array.isArray(saved) && saved.length) CANDIDATES = saved;
+  render();
+}
+init();
