@@ -177,6 +177,9 @@ function downloadRosterTemplate(){
 }
 
 // ---- Organizer password (hashed, stored in the shared DB — never in this code) ----
+const RESET_EMAIL = 'phdposterday@gmail.com'; // inbox that can reset the organizer password
+let resetStage = 'send'; // 'send' -> 'code' -> 'setpass'
+
 function randHex(nBytes){
   const a = new Uint8Array(nBytes);
   crypto.getRandomValues(a);
@@ -217,6 +220,7 @@ function render(){
   if(state.view==='score') return renderScore(app);
   if(state.view==='submitted') return renderSubmitted(app);
   if(state.view==='orgGate') return renderOrgGate(app);
+  if(state.view==='orgReset') return renderOrgReset(app);
   if(state.view==='dashboard') return renderDashboard(app);
 }
 
@@ -265,8 +269,8 @@ function renderJuryName(app){
   const card = document.createElement('div');
   card.className='card';
   card.innerHTML = `
-    <label>Jury ID</label>
-    <input type="text" id="juryInput" placeholder="Enter your Jury ID" value="${esc(state.juryName||'')}">
+    <label>Jury member name</label>
+    <input type="text" id="juryInput" placeholder="e.g. Prof. Anna Weber" value="${esc(state.juryName||'')}">
     <div style="height:14px"></div>
     <button class="btn btn-primary" id="continueBtn" disabled>Continue</button>
   `;
@@ -524,8 +528,17 @@ async function renderOrgGate(app){
     <input type="password" id="passInput" placeholder="Enter organizer password">
     <div style="height:14px"></div>
     <button class="btn btn-primary" id="goBtn">View dashboard</button>
+    <div style="margin-top:12px;text-align:center;">
+      <a href="#" id="forgotLink" style="font-size:13px;color:var(--ink-soft);">Forgot the password?</a>
+    </div>
     <div class="footnote">Keeps results hidden from jury members during the event.</div>
   `;
+  document.getElementById('forgotLink').onclick = (e) => {
+    e.preventDefault();
+    resetStage = 'send';
+    state.view = 'orgReset';
+    render();
+  };
   const verify = async () => {
     const btn = document.getElementById('goBtn'); btn.disabled = true; btn.textContent = 'Checking…';
     const v = document.getElementById('passInput').value;
@@ -535,6 +548,99 @@ async function renderOrgGate(app){
   };
   document.getElementById('goBtn').onclick = verify;
   document.getElementById('passInput').onkeydown = (e) => { if(e.key==='Enter') verify(); };
+  document.getElementById('passInput').focus();
+}
+
+// Email-based password recovery: send a one-time code to RESET_EMAIL, verify it,
+// then let the organizer set a new password.
+async function renderOrgReset(app){
+  topbar(app, 'Reset organizer password', '', () => { state.view='orgGate'; render(); });
+  const card = document.createElement('div');
+  card.className='card';
+  app.appendChild(card);
+
+  if(!window.orgAuth){
+    card.innerHTML = `<div class="empty-state">Password reset by email needs the online database connection, which isn't configured for this site.</div>`;
+    return;
+  }
+
+  if(resetStage === 'send'){
+    card.innerHTML = `
+      <h2 style="font-size:18px;margin-bottom:8px;">Forgot the password?</h2>
+      <p style="color:var(--ink-soft);font-size:14px;margin-bottom:10px;">A one-time code will be emailed to the official organizer account:</p>
+      <p style="font-weight:600;margin-bottom:14px;">${esc(RESET_EMAIL)}</p>
+      <button class="btn btn-primary" id="sendBtn">Send code</button>
+      <div class="footnote">Only someone with access to that inbox can reset the password.</div>
+    `;
+    document.getElementById('sendBtn').onclick = async () => {
+      const btn = document.getElementById('sendBtn'); btn.disabled = true; btn.textContent = 'Sending…';
+      try{
+        await window.orgAuth.sendResetCode(RESET_EMAIL);
+        resetStage = 'code'; render();
+      }catch(e){
+        btn.disabled = false; btn.textContent = 'Send code';
+        alert('Could not send the code: ' + (e && e.message ? e.message : 'unknown error'));
+      }
+    };
+    return;
+  }
+
+  if(resetStage === 'code'){
+    card.innerHTML = `
+      <h2 style="font-size:18px;margin-bottom:8px;">Enter the code</h2>
+      <p style="color:var(--ink-soft);font-size:14px;margin-bottom:12px;">Check the inbox of <b>${esc(RESET_EMAIL)}</b> for a one-time code and enter it below. It may take a minute to arrive.</p>
+      <input type="text" id="codeInput" inputmode="numeric" autocomplete="one-time-code" placeholder="One-time code">
+      <div style="height:14px"></div>
+      <button class="btn btn-primary" id="verifyBtn">Verify code</button>
+      <button class="btn btn-ghost" id="resendBtn" style="margin-top:10px;">Send a new code</button>
+    `;
+    document.getElementById('verifyBtn').onclick = async () => {
+      const code = document.getElementById('codeInput').value.trim();
+      if(code.length < 4){ alert('Please enter the code from the email.'); return; }
+      const btn = document.getElementById('verifyBtn'); btn.disabled = true; btn.textContent = 'Verifying…';
+      try{
+        const ok = await window.orgAuth.verifyResetCode(RESET_EMAIL, code);
+        if(ok){ resetStage = 'setpass'; render(); }
+        else { btn.disabled = false; btn.textContent = 'Verify code'; alert('Code not accepted. Please try again.'); }
+      }catch(e){
+        btn.disabled = false; btn.textContent = 'Verify code';
+        alert('Invalid or expired code — try sending a new one. (' + (e && e.message ? e.message : 'error') + ')');
+      }
+    };
+    document.getElementById('resendBtn').onclick = () => { resetStage = 'send'; render(); };
+    document.getElementById('codeInput').focus();
+    return;
+  }
+
+  // resetStage === 'setpass'
+  card.innerHTML = `
+    <h2 style="font-size:18px;margin-bottom:8px;">Set a new password</h2>
+    <p style="color:var(--ink-soft);font-size:13px;margin-bottom:12px;">Identity confirmed. Choose a new organizer password.</p>
+    <input type="password" id="passInput" placeholder="New password (min 4 characters)">
+    <div style="height:10px"></div>
+    <input type="password" id="passConfirm" placeholder="Confirm password">
+    <div style="height:14px"></div>
+    <button class="btn btn-primary" id="saveBtn">Save new password</button>
+  `;
+  document.getElementById('saveBtn').onclick = async () => {
+    const p1 = document.getElementById('passInput').value;
+    const p2 = document.getElementById('passConfirm').value;
+    if(p1.length < 4){ alert('Please use at least 4 characters.'); return; }
+    if(p1 !== p2){ alert('The two passwords do not match.'); return; }
+    const btn = document.getElementById('saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
+    const salt = randHex(16);
+    const hash = await hashPass(p1, salt);
+    const ok = await saveOrgConfig({ salt, hash });
+    if(window.orgAuth.signOut) await window.orgAuth.signOut();
+    if(ok){
+      resetStage = 'send';
+      alert('Password reset. Opening the dashboard.');
+      state.view = 'dashboard'; render();
+    }else{
+      btn.disabled = false; btn.textContent = 'Save new password';
+      alert('Could not save the new password — check your connection and try again.');
+    }
+  };
   document.getElementById('passInput').focus();
 }
 
