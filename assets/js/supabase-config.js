@@ -66,4 +66,24 @@ const SUPABASE_ANON_KEY = 'sb_publishable_DQvdFAbF4e0ifEkwf-vHIA_2dfarkk8';
       return true;
     }
   };
+
+  // Email-based organizer password reset, via Supabase's built-in email auth.
+  // A one-time code is emailed to the organizer inbox; only someone who can read
+  // that inbox can complete the reset. Requires Email auth enabled in Supabase
+  // and the code token ({{ .Token }}) present in the Magic Link email template.
+  window.orgAuth = {
+    async sendResetCode(email) {
+      const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+      if (error) throw error;
+      return true;
+    },
+    async verifyResetCode(email, token) {
+      const { data, error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
+      if (error) throw error;
+      return !!(data && (data.session || data.user));
+    },
+    async signOut() {
+      try { await sb.auth.signOut(); } catch (e) { /* ignore */ }
+    }
+  };
 })();
