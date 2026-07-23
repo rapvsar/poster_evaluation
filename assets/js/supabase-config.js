@@ -57,10 +57,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_DQvdFAbF4e0ifEkwf-vHIA_2dfarkk8';
       if (error) throw error;
       return { keys: (data || []).map(r => r.key) };
     },
-    // Wipe every record — used by the organizer "Clear all results" button
-    // to reset the platform for a new event.
+    // Wipe every jury submission (keys "jury:*") — used by the organizer
+    // "Clear all results" button to reset the platform for a new event.
+    // The uploaded candidate roster (key "candidates") is deliberately kept.
     async clearAll() {
-      const { error } = await sb.from(TABLE).delete().neq('key', '');
+      const { error } = await sb.from(TABLE).delete().like('key', 'jury:%');
       if (error) throw error;
       return true;
     }
