@@ -270,7 +270,7 @@ function renderJuryName(app){
   card.className='card';
   card.innerHTML = `
     <label>Jury member name</label>
-    <input type="text" id="juryInput" placeholder="e.g. Prof. Anna Weber" value="${esc(state.juryName||'')}">
+    <input type="text" id="juryInput" placeholder="Enter your Unique ID" value="${esc(state.juryName||'')}">
     <div style="height:14px"></div>
     <button class="btn btn-primary" id="continueBtn" disabled>Continue</button>
   `;
