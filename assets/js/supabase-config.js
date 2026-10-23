@@ -20,8 +20,8 @@
  * "secret" key here.)
  */
 
-const SUPABASE_URL = 'https://rgmdkcqdphiaadpiqqnt.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_DQvdFAbF4e0ifEkwf-vHIA_2dfarkk8';
+const SUPABASE_URL = 'https://ullnmawejeazhncnmbvz.supabase.co/rest/v1/'; // new test url 
+const SUPABASE_ANON_KEY = 'sb_publishable_M7qlXh4KUab49Cc8cd2R8A_LkEpwQ7G'; // and key 
 
 (function () {
   if (typeof supabase === 'undefined' || !supabase.createClient) {
