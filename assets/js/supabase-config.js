@@ -20,7 +20,7 @@
  * "secret" key here.)
  */
 
-const SUPABASE_URL = 'https://rgmdkcqdphiaadpiqqnt.supabase.co';
+const SUPABASE_URL = 'https://rgmdkcqdphiaadpiqqnt.supabase.co'; // testing 
 const SUPABASE_ANON_KEY = 'sb_publishable_DQvdFAbF4e0ifEkwf-vHIA_2dfarkk8';
 
 (function () {
